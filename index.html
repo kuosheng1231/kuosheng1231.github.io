@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Coffee Shop Finder</title>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5Y_ZMLOvBGWU8Nz9Vc-Q_Jg2IhGQK574&libraries=places"
+      defer
+    ></script>
+  </head>
+  <body>
+    <h1>Coffee Shop Finder</h1>
+    <div>
+      <button onclick="getCurrentLocation()">Use my current location</button>
+      <input type="text" id="location" placeholder="Enter a location">
+      <button onclick="searchCoffeeShop()">Search</button>
+    </div>
+    <div id="map" style="height: 500px;"></div>
+    <div id="results"></div>
+    <script>
+      let map, infoWindow;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 14,
+        });
+        infoWindow = new google.maps.InfoWindow();
+      }
+      function getCurrentLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+              map.setCenter(pos);
+            },
+            () => {
+              alert("Error: The Geolocation service failed.");
+            }
+          );
+        } else {
+          alert("Error: Your browser doesn't support geolocation.");
+        }
+      }
+      function searchCoffeeShop() {
+        const locationInput = document.getElementById("location");
+        const location = locationInput.value || map.getCenter();
+        const service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(
+          {
+            location: location,
+            radius: 1000,
+            type: "cafe",
+          },
+          (results, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+              let resultsHtml = "";
+              for (let i = 0; i < results.length; i++) {
+                const place = results[i];
+                resultsHtml += `
+                  <div>
+                    <h2>${place.name}</h2>
+                    <p>Rating: ${place.rating} (${place.user_ratings_total} reviews)</p>
+                    <p>Address: ${place.vicinity}</p>
+                  </div>
+                `;
+                const marker = new google.maps.Marker({
+                  map: map,
+                  position: place.geometry.location,
+                  title: place.name,
+                });
+              }
+              document.getElementById("results").innerHTML = resultsHtml;
+            } else {
+              alert("Error: " + status);
+            }
+          }
+        );
+      }
+    </script>
+  </body>
+</html>
